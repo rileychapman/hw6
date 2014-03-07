@@ -22,7 +22,7 @@ class JumpGuyModel:
 
 
 class Guy2(pygame.sprite.Sprite):
-   def __init__(self,model):
+    def __init__(self,model):
         pygame.sprite.Sprite.__init__(self) #call Sprite initializer
         self.image, self.rect = load_image('ball.bmp', -1) #load an image
         self.jump = False #not jumping to start
@@ -33,16 +33,16 @@ class Guy2(pygame.sprite.Sprite):
         self.v_input = (0.0,0.0)
 
     def update(self):
-        if self.v_input[0] != 0
+        if self.v_input[0] != 0:
             self.v[0] = self.v_input
         elif self.v[0] < 0:
             self.v[0] += .1
-        elif self.v[0] > 0 
+        elif self.v[0] > 0:
             self.v[0] -= .1
 
         if self.pos < self.model.window_size[1]:
             self.v[1] += .5
-        elif self.jump::
+        elif self.jump:
             self.v[1] = 10
         else:
             self.v[1] = 0
@@ -60,7 +60,7 @@ class Guy2(pygame.sprite.Sprite):
                 
 
 
-class Guy():
+class Guy(pygame.sprite.Sprite):
     def __init__(self,color,height,width,x,y,window_size):
         self.color = color
         self.height = height
@@ -69,38 +69,61 @@ class Guy():
         self.y = y
         self.forcex = 0.0
         self.forcey = 0.0
+        self.stopforce = 0.0
         self.vx = 0
         self.vy = 0
         self.jump = False
         self.window_size = window_size
+        self.vx_inter = 0.0
         #self.grav_start = 0
 
     def update(self):
         """ updates the position of the guy"""
 
-        if self.jump:
-            self.vy = 50
+        if self.jump and self.y == self.window_size[1]-self.height :
+            self.vy = -5
             #grav_start = pygame.time.get_ticks()
         else:
             #grav_now = pygame.time.get_ticks()
             #time_air = grav_now-grav_start
             self.vy += .1
 
+        self.vx_inter += self.forcex*.2
 
-        self.vx += self.forcex*.001
-        if self.x == -1:
-            self.x = 0
-        elif self.x == window_size[0]+1:
-            self.x == window_size[0]
-
-
-            self.x += self.vx
+        if self.stopforce > 0 and self.vx <0:
+            self.vx_inter +=self.stopforce*.01
+        elif self.stopforce <0 and self.vx > 0:
+            self.vx_inter +=self.stopforce*.01
 
 
-        if self.y < window_size[1]:
-            self.y += self.vy
+
+        speed_cap = 1
+
+        if self.vx_inter < -speed_cap:
+            self.vx_inter = -speed_cap
+        elif self.vx_inter > speed_cap:
+            self.vx_inter = speed_cap
+
         else:
-            self.y = window_size[1]
+            self.vx_inter = self.vx_inter
+
+        self.vx = self.vx_inter
+
+        if self.x < -1:
+            self.x = 0
+        elif self.x > self.window_size[0]-self.width:
+            self.x = self.window_size[0]-self.width
+        else:
+            self.x += self.vx
+        print self.forcex
+
+        if self.y < self.window_size[1]-self.height:
+            self.y += self.vy            
+        else:
+            if self.vy > 0:
+                self.y = self.window_size[1]-self.height
+            else: 
+                self.y +=self.vy
 
 
 
@@ -122,26 +145,31 @@ class keyboard_controller:
         self.model = model
 
     def handle_keyboard_event(self,event):
-  
 
-        #keys = pygame.key.get_pressed()
+        self.model.guy.jump = False
         if event.type == KEYDOWN:
-
             if event.key == pygame.K_LEFT:
                 self.model.guy.forcex = -1
-            if event.key == pygame.K_RIGHT:
-                self.model.guy.forcx = 1
+                print 'left_down'
+            elif event.key == pygame.K_RIGHT:
+                self.model.guy.forcex = 1
+                print 'right_down'
             else:
-                self.model.guy.forcx = 0
+                self.model.guy.forcex = 0
 
             if event.key == pygame.K_UP:
                 self.model.guy.jump = True
 
         if event.type == KEYUP:
-            if event.key == pygame.K_RIGHT and model.guy.vx < 0:
-                model.guy.forcex = 5
-            if event.key == pygame.K_LEFT and model.guy.vx > 0:
-                model.guy.forcex = -5
+            if event.key == pygame.K_RIGHT and model.guy.vx > 0:
+                model.guy.stopforce = -5
+                model.guy.forcex = 0
+                print 'right_up'
+
+            if event.key == pygame.K_LEFT: #and model.guy.vx < 0:
+                model.guy.stopforce = 5
+                model.guy.forcex = 0
+                print 'left_up'
 
 
 if __name__ == '__main__':
