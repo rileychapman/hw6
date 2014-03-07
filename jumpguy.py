@@ -36,37 +36,11 @@ class JumpGuyModel:
         print 'creating an object'
        
         self.guy = Guy((255,255,255),20,100,200,450,self.size)
-    def update(self):
-        self.guy.update()
-
-
-class Guy2(pygame.sprite.Sprite):
-    def __init__(self,model):
-        pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-        self.image, self.rect = load_image('ball.bmp', -1) #load an image
-        self.jump = False #not jumping to start
-        self.pos = (0,0) #start positions
-        self.height = self.pos[1] + model.window_size[1] #calculates height
-        self.forces = (0.0,0.0)
-        self.v = (0.0,0.0)
-        self.v_input = (0.0,0.0)
+        self.allsprites = pygame.sprite.RenderPlain((self.guy))
 
     def update(self):
-        if self.v_input[0] != 0:
-            self.v[0] = self.v_input
-        elif self.v[0] < 0:
-            self.v[0] += .1
-        elif self.v[0] > 0:
-            self.v[0] -= .1
+        self.allsprites.update()
 
-        if self.pos < self.model.window_size[1]:
-            self.v[1] += .5
-        elif self.jump:
-            self.v[1] = 10
-        else:
-            self.v[1] = 0
-
-        
 
 
             
@@ -80,15 +54,17 @@ class Guy2(pygame.sprite.Sprite):
 
 
 class Guy(pygame.sprite.Sprite):
-    def __init__(self,color,height,width,x,y,window_size):       
-        self.image, self.rect = load_image('ball.bmp', -1) #load an image
+    def __init__(self,color,height,width,x,y,window_size):      
+        pygame.sprite.Sprite.__init__(self)
+
+        self.image, self.rect = load_image('finn1.png', -1) #load an image
 
 
         self.color = color
-        self.height = height
-        self.width = width
-        self.x = x
-        self.y = y
+        self.height = self.rect.height
+        self.width = self.rect.width
+        self.x = self.rect.topleft[0]
+        self.y = self.rect.topleft[1]
         self.forcex = 0.0
         self.forcey = 0.0
         self.stopforce = 0.0
@@ -104,6 +80,10 @@ class Guy(pygame.sprite.Sprite):
 
         if self.jump and self.y == self.window_size[1]-self.height :
             self.vy = -5
+        elif self.jump and self.x == 0:
+            self.vy = -5
+        elif self.jump and self.x+self.width == self.window_size[0]:
+            self.vy = -5
         else:
             self.vy += .1
 
@@ -116,7 +96,7 @@ class Guy(pygame.sprite.Sprite):
 
 
 
-        speed_cap = 1
+        speed_cap = 2
 
         if self.vx_inter < -speed_cap:
             self.vx_inter = -speed_cap
@@ -143,7 +123,7 @@ class Guy(pygame.sprite.Sprite):
             else: 
                 self.y +=self.vy
 
-
+        self.rect.topleft = (self.x,self.y)
 
 
 class View:
@@ -154,7 +134,8 @@ class View:
 
     def draw(self):
         self.screen.fill(pygame.Color(0,0,0))
-        pygame.draw.rect(self.screen , pygame.Color(self.model.guy.color[0],self.model.guy.color[1],self.model.guy.color[2]), pygame.Rect(self.model.guy.x,self.model.guy.y,self.model.guy.width,self.model.guy.height))
+        #pygame.draw.rect(self.screen , pygame.Color(self.model.guy.color[0],self.model.guy.color[1],self.model.guy.color[2]), pygame.Rect(self.model.guy.x,self.model.guy.y,self.model.guy.width,self.model.guy.height))
+        model.allsprites.draw(screen)
 
         pygame.display.update()
 
@@ -175,15 +156,14 @@ class keyboard_controller:
 
             if event.key == pygame.K_UP:
                 self.model.guy.jump = True
-                print self.model.guy.forcex
 
         if event.type == KEYUP:
             if event.key == pygame.K_RIGHT:# and model.guy.vx > 0:
-                model.guy.stopforce = -5
+                model.guy.stopforce = -2
                 model.guy.forcex = 0
 
             if event.key == pygame.K_LEFT: #and model.guy.vx < 0:
-                model.guy.stopforce = 5
+                model.guy.stopforce = 2
                 model.guy.forcex = 0
 
 
