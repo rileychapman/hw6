@@ -1,7 +1,7 @@
 """
 Created on Thu Feb 27 19:34:24 2014
 
-@author: pruvolo
+@author: Riley Chapman and Paul Titchner 
 """
 
 import pygame
