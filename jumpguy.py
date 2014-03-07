@@ -9,6 +9,25 @@ from pygame.locals import *
 import random
 import math
 import time
+import sys,os
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join('data', name)
+    try:
+        image = pygame.image.load(fullname)
+    except pygame.error, message:
+        try:
+            image = pygame.image.load(name)
+        except pygame.error, message:
+            print 'Cannot load image:', name
+            raise SystemExit, message
+    image = image.convert()
+    if colorkey is not None:
+        if colorkey is -1:
+            colorkey = image.get_at((0,0))
+        image.set_colorkey(colorkey, RLEACCEL)
+    return image, image.get_rect()
+
 
 class JumpGuyModel:
     """This class encodes the game state"""
@@ -61,7 +80,10 @@ class Guy2(pygame.sprite.Sprite):
 
 
 class Guy(pygame.sprite.Sprite):
-    def __init__(self,color,height,width,x,y,window_size):
+    def __init__(self,color,height,width,x,y,window_size):       
+        self.image, self.rect = load_image('ball.bmp', -1) #load an image
+
+
         self.color = color
         self.height = height
         self.width = width
@@ -82,10 +104,7 @@ class Guy(pygame.sprite.Sprite):
 
         if self.jump and self.y == self.window_size[1]-self.height :
             self.vy = -5
-            #grav_start = pygame.time.get_ticks()
         else:
-            #grav_now = pygame.time.get_ticks()
-            #time_air = grav_now-grav_start
             self.vy += .1
 
         self.vx_inter += self.forcex*.2
@@ -115,7 +134,6 @@ class Guy(pygame.sprite.Sprite):
             self.x = self.window_size[0]-self.width
         else:
             self.x += self.vx
-        print self.forcex
 
         if self.y < self.window_size[1]-self.height:
             self.y += self.vy            
@@ -150,26 +168,23 @@ class keyboard_controller:
         if event.type == KEYDOWN:
             if event.key == pygame.K_LEFT:
                 self.model.guy.forcex = -1
-                print 'left_down'
             elif event.key == pygame.K_RIGHT:
                 self.model.guy.forcex = 1
-                print 'right_down'
-            else:
-                self.model.guy.forcex = 0
+            #else:
+                #self.model.guy.forcex = 0
 
             if event.key == pygame.K_UP:
                 self.model.guy.jump = True
+                print self.model.guy.forcex
 
         if event.type == KEYUP:
-            if event.key == pygame.K_RIGHT and model.guy.vx > 0:
+            if event.key == pygame.K_RIGHT:# and model.guy.vx > 0:
                 model.guy.stopforce = -5
                 model.guy.forcex = 0
-                print 'right_up'
 
             if event.key == pygame.K_LEFT: #and model.guy.vx < 0:
                 model.guy.stopforce = 5
                 model.guy.forcex = 0
-                print 'left_up'
 
 
 if __name__ == '__main__':
