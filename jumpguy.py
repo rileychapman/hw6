@@ -81,9 +81,9 @@ class Guy(pygame.sprite.Sprite):
         if self.jump and self.y == self.window_size[1]-self.height :
             self.vy = -5
         elif self.jump and self.x == 0:
-            self.vy = -5
+            self.vy = -3
         elif self.jump and self.x+self.width == self.window_size[0]:
-            self.vy = -5
+            self.vy = -3
         else:
             self.vy += .1
 
