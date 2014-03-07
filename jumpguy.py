@@ -30,8 +30,32 @@ class Guy2(pygame.sprite.Sprite):
         self.height = self.pos[1] + model.window_size[1] #calculates height
         self.forces = (0.0,0.0)
         self.v = (0.0,0.0)
+        self.v_input = (0.0,0.0)
 
     def update(self):
+        if self.v_input[0] != 0
+            self.v[0] = self.v_input
+        elif self.v[0] < 0:
+            self.v[0] += .1
+        elif self.v[0] > 0 
+            self.v[0] -= .1
+
+        if self.pos < self.model.window_size[1]:
+            self.v[1] += .5
+        elif self.jump::
+            self.v[1] = 10
+        else:
+            self.v[1] = 0
+
+        
+
+
+            
+
+
+        
+
+
 
                 
 
