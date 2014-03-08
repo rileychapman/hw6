@@ -41,6 +41,7 @@ class JumpGuyModel:
         for y_coins in range(0,self.size[1],100):
             coin = Coin(self,20,y_coins)
             self.coins.append(coin)
+
         block_test = Block(self,0,0)
 
         self.border = []
@@ -165,7 +166,7 @@ class JumpGuyModel:
                 T_col = False
                 B_col = False
 
-                
+
         else:
             self.Left_Collide = False
             self.Right_Collide = False
@@ -391,8 +392,10 @@ class keyboard_controller:
 
 if __name__ == '__main__':
     pygame.init()
-
-    size = (640,600)
+    size_scale = 4
+    size_scalex = 6
+    size_scaley = 4
+    size = (size_scalex*30*size_scale,size_scaley*30*size_scale)
     screen = pygame.display.set_mode(size)
 
     model = JumpGuyModel(size)
