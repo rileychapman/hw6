@@ -44,13 +44,14 @@ class JumpGuyModel:
 
         block_test = Block(self,0,0)
         self.block_test = block_test
-
+        
         self.border = []
         for x_border in range(0,self.size[1],block_test.height):
             block = Block(self,0,x_border)
             block1 = Block(self,self.size[0] - block_test.width,x_border)
             self.border.append(block)
             self.border.append(block1)
+
         for y_border in range(0,self.size[0],block_test.width):
             block = Block(self,y_border,0)
             block2 = Block(self,y_border,self.size[1]-block_test.height)
@@ -60,10 +61,9 @@ class JumpGuyModel:
 
 
         self.blocks = []
-        for x_blocks in range (0,self.size[0]-50,block_test.width):
+        for x_blocks in range (0,self.size[0]-100,block_test.width):
             block1 = Block(self,x_blocks,200)
-            self.blocks.append(block)
-
+            self.blocks.append(block1)
 
         self.allsprites = pygame.sprite.Group(self.guy)
         self.coinsprites = pygame.sprite.Group()
