@@ -227,12 +227,14 @@ class Guy(pygame.sprite.Sprite):
             self.jump = False
         elif self.jump and self.model.Left_Collide:
             self.vy = -5
-            self.vx_jump = 20
+            self.vx_jump = 2
             self.jump = False
+            print 'wall jump'
         elif self.jump and self.model.Right_Collide:
             self.vy = -5
-            self.vx_jump = -20
+            self.vx_jump = -2
             self.jump = False
+            print 'wall jump'
         else:
             self.vy += .1
             self.vx_jump = 0
@@ -264,7 +266,7 @@ class Guy(pygame.sprite.Sprite):
             self.vx_inter = self.vx_inter 
 
 
-        self.vx = self.vx_inter# + self.vx_jump
+        self.vx = self.vx_inter+ self.vx_jump
 
 #code  that keeps the guy ouside of the blocks
 
