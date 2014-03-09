@@ -110,11 +110,9 @@ class JumpGuyModel:
 
 
         if len(blocks_hit_list) > 0:
-            print blocks_hit_list
             for hitblock in blocks_hit_list:
                 x_distance = self.guy.rect.center[0] - hitblock.rect.center[0]
                 y_distance = self.guy.rect.center[1] - hitblock.rect.center[1]
-                print 'y_dist', y_distance,'x_dist',x_distance
                 if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
                     if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision 
                         self.Bottom_Collide = True
@@ -130,7 +128,6 @@ class JumpGuyModel:
                         self.Right_Collide = True
                         self.Rcol_block = [hitblock]
 
-                print "Left:", self.Left_Collide, " Right:", self.Right_Collide, " Top:", self.Top_Collide, " Bottom:", self.Bottom_Collide
 
 
         else:
@@ -220,31 +217,41 @@ class Guy(pygame.sprite.Sprite):
         #self.grav_start = 0
         self.rect.topleft = (x,y)
         self.model = model
+        self.jumpup = False
 
     def update(self):
         """ updates the position of the guy"""
 
-        if self.jump and self.model.Bottom_Collide:
+        if self.jump and self.model.Bottom_Collide and not self.model.Left_Collide and not self.model.Right_Collide:
             self.vy = -5
+            self.jump = False
         elif self.jump and self.model.Left_Collide:
-            self.vy = -3
-            self.vx_jump = 3
-        elif self.jump and self.x+self.width == self.window_size[0]:
-            self.vy = -3
-            self.vx_jump = -3
+            self.vy = -5
+            self.vx_jump = 20
+            self.jump = False
+        elif self.jump and self.model.Right_Collide:
+            self.vy = -5
+            self.vx_jump = -20
+            self.jump = False
         else:
             self.vy += .1
             self.vx_jump = 0
 
+        self.vx_inter = self.vx
+        self.vx_inter += self.forcex*.03
 
-        self.vx_inter += self.forcex*.2 
-
-        if self.stopforce > 0 and self.vx <0:
-            self.vx_inter +=self.stopforce*.01
-        elif self.stopforce <0 and self.vx > 0:
-            self.vx_inter +=self.stopforce*.01
-
-
+        #if self.stopforce != 0 and self.vx <0 and self.forcex ==0:\
+        if self.forcex == 0 and self.vx< 0:
+            self.vx_inter +=.05#self.stopforce*.05
+            if self.vx_inter > -.06:
+                self.vx_inter = 0
+        #elif self.stopforce != 0 and self.vx> 0 and self.forcex ==0:
+        elif self.forcex ==0  and self.vx>.05:
+            self.vx_inter -=   .05#self.stopforce*.05
+            if self.vx_inter <.06:
+                self.vx_inter = 0
+        else:
+            self.stopforce = 0
 
         speed_cap = 2
 
@@ -254,9 +261,10 @@ class Guy(pygame.sprite.Sprite):
             self.vx_inter = speed_cap
 
         else:
-            self.vx_inter = self.vx_inter
+            self.vx_inter = self.vx_inter 
 
-        self.vx = self.vx_inter #+ self.vx_jump
+
+        self.vx = self.vx_inter# + self.vx_jump
 
 #code  that keeps the guy ouside of the blocks
 
@@ -286,11 +294,9 @@ class Guy(pygame.sprite.Sprite):
                 self.y +=self.vy
         elif model.Bottom_Collide:
             if self.vy > 0.0:
-                print 'current',self.y
                 
                 self.y = self.model.Bcol_block[0].rect.topleft[1]-self.height+1
                 self.vy = 0
-                print 'setpoint',self.y
 
                 
             else: 
@@ -303,7 +309,6 @@ class Guy(pygame.sprite.Sprite):
         self.ooposy = self.oposy
         self.oposx = self.rect.topleft[0]
         self.oposy = self.rect.topleft[1]
-        print self.x,self.y
         self.rect.topleft = (self.x,self.y)
 
 
@@ -356,6 +361,10 @@ class keyboard_controller:
 
             if event.key == pygame.K_UP:
                 self.model.guy.jump = True
+                self.model.guy.jumpup = False
+
+
+
 
         if event.type == KEYUP:
             if event.key == pygame.K_RIGHT:# and model.guy.vx > 0:
@@ -365,6 +374,8 @@ class keyboard_controller:
             if event.key == pygame.K_LEFT: #and model.guy.vx < 0:
                 model.guy.stopforce = 2
                 model.guy.forcex = 0
+            if event.key == pygame.K_RIGHT:
+                model.guy.jumpup = True
 
 
 if __name__ == '__main__':
@@ -374,6 +385,8 @@ if __name__ == '__main__':
     size_scaley = 4
     size = (size_scalex*30*size_scale,size_scaley*30*size_scale)
     screen = pygame.display.set_mode(size)
+    clock = pygame.time.Clock()
+
 
     model = JumpGuyModel(size)
     view = View(model,screen)
@@ -382,6 +395,8 @@ if __name__ == '__main__':
     running = True
 
     while running:
+        clock.tick(120) #makes the game run at a constant rate 
+
         for event in pygame.event.get():
             if event.type == KEYDOWN or KEYUP:
                 controller.handle_keyboard_event(event)
@@ -392,6 +407,5 @@ if __name__ == '__main__':
         model.update()
         view.draw()
         time.sleep(.001)
-
 
     pygame.quit()
