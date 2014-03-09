@@ -114,8 +114,13 @@ class JumpGuyModel:
                 x_distance = self.guy.rect.center[0] - hitblock.rect.center[0]
                 y_distance = self.guy.rect.center[1] - hitblock.rect.center[1]
                 if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
-                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision 
-                        self.Bottom_Collide = True
+                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision
+                        #self.Bottom_Collide = True
+
+                        if abs(self.guy.rect.topleft[0] - hitblock.rect.topright[0]) < 3 or abs(self.guy.rect.topright[0] - hitblock.rect.topleft[0]) < 3 and not self.Bottom_Collide:
+                            self.Bottom_Collide = False
+                        else:
+                            self.Bottom_Collide = True
                         self.Bcol_block = [hitblock]
                     else: #top collision
                         self.Top_Collide = True
