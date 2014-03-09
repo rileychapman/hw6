@@ -64,13 +64,15 @@ class JumpGuyModel:
             self.blocks.append(block)
 
 
-        self.allsprites = pygame.sprite.Group((self.guy))
+        self.allsprites = pygame.sprite.Group(self.guy)
+        self.coinsprites = pygame.sprite.Group()
+        self.blocksprites = pygame.sprite.Group()
         for coin in self.coins:
-            pygame.sprite.Group.add(self.allsprites,coin)
+            pygame.sprite.Group.add(self.coinsprites,coin)
         for block in self.blocks:
-            pygame.sprite.Group.add(self.allsprites,block)
+            pygame.sprite.Group.add(self.blocksprites,block)
         for block in self.border:
-            pygame.sprite.Group.add(self.allsprites,block)
+            pygame.sprite.Group.add(self.blocksprites,block)
 
         #initalizing block collision stuff
         self.Left_Collide = False
@@ -82,89 +84,35 @@ class JumpGuyModel:
     def update(self):
         for coin in self.coins:
             if coin.disappear:
-                self.allsprites.remove(coin)
+                self.coinsprites.remove(coin)
                 self.coins.remove(coin)
                 self.score +=1
 
-        blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocks+self.border, False)
+        blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
+        #spritecollide(sprite, group, dokill, collided = None)
+
+        self.Left_Collide = False
+        self.Right_Collide = False
+        self.Bottom_Collide = False
+        self.Top_Collide = False
+
         if len(blocks_hit_list) > 0:
+            print blocks_hit_list
             for hitblock in blocks_hit_list:
-                """h
-                """
-                if not self.Top_Collide:    
-                    self.Top_Collide_int =  self.guy.rect.bottomleft[1] >= hitblock.rect.topleft[1] 
-                if not self.Bottom_Collide:
-                    self.Bottom_Collide_int =  self.guy.rect.topleft[1] >= hitblock.rect.bottomleft[1] 
-                if not self.Right_Collide:
-                    self.Right_Collide_int =  self.guy.rect.topright[0] >= hitblock.rect.topleft[0] 
-                if not self.Left_Collide:          
-                    self.Left_Collide_int =  self.guy.rect.topleft[0] >= hitblock.rect.topright[0]
-                """
+                x_distance = self.guy.rect.center[0] - hitblock.rect.center[0]
+                y_distance = self.guy.rect.center[1] - hitblock.rect.center[1]
+                if x_distance < y_distance: # we collided on top or bottom 
+                    if y_distance >= 0: #bottom collision 
+                        self.Bottom_Collide = True
+                    else: #top collision
+                        self.Top_Collide = True
+                else: #we collided on left or right 
+                    if x_distance >= 0: #left collision
+                        self.Left_Collide = True
+                    else: #right collision
+                        self.Right_Collide = True
 
-                """
-                tol = 10
-                if not self.Top_Collide:    
-                    self.Top_Collide_int =  abs(self.guy.rect.bottomleft[1] - hitblock.rect.topleft[1]) <tol
-                if not self.Bottom_Collide:
-                    self.Bottom_Collide_int =  abs(self.guy.rect.topleft[1] - hitblock.rect.bottomleft[1]) <tol
-                if not self.Right_Collide:
-                    self.Right_Collide_int =  abs(self.guy.rect.topright[0] - hitblock.rect.topleft[0] ) <tol
-                if not self.Left_Collide:          
-                    self.Left_Collide_int =  abs(self.guy.rect.topleft[0] - hitblock.rect.topright[0]) <tol
-                """
-
-                if not self.Top_Collide:    
-                    self.Top_Collide_int =  (self.guy.oposy+self.guy.height) <= hitblock.rect.topleft[1] 
-                if not self.Bottom_Collide:
-                    self.Bottom_Collide_int =  self.guy.oposy >= hitblock.rect.bottomleft[1] 
-                if not self.Right_Collide:
-                    self.Right_Collide_int =  (self.guy.oposx+self.guy.width) <= hitblock.rect.topleft[0] 
-                if not self.Left_Collide:          
-                    self.Left_Collide_int =  self.guy.oposx >= hitblock.rect.topright[0]
-
-                if not self.Top_Collide:    
-                    self.Top_Collide_int1 =  (self.guy.ooposy+self.guy.height) <= hitblock.rect.topleft[1] 
-                if not self.Bottom_Collide:
-                    self.Bottom_Collide_int1 =  self.guy.ooposy >= hitblock.rect.bottomleft[1] 
-                if not self.Right_Collide:
-                    self.Right_Collide_int1 =  (self.guy.ooposx+self.guy.width) <= hitblock.rect.topleft[0] 
-                if not self.Left_Collide:          
-                    self.Left_Collide_int1 =  self.guy.ooposx >= hitblock.rect.topright[0]
-
-                """
-                """
-                self.Left_Collide = self.Left_Collide_int and not self.Bottom_Collide_int and not self.Top_Collide_int
-                self.Right_Collide = self.Right_Collide_int and not self.Bottom_Collide_int and not self.Top_Collide_int
-                self.Top_Collide = self.Top_Collide_int and not self.Bottom_Collide_int and not self.Top_Collide_int
-                self.Bottom_Collide = self.Bottom_Collide_int and not self.Bottom_Collide_int and not self.Top_Collide_int
-                """
-                """
-
-
-                self.Top_Collide = self.Top_Collide_int and self.Top_Collide_int1 
-                self.Bottom_Collide = self.Bottom_Collide_int and self.Bottom_Collide_int1
-                self.Right_Collide = self.Right_Collide_int and self.Right_Collide_int1 and not self.Top_Collide and not self.Bottom_Collide
-                self.Left_Collide = self.Left_Collide_int and self.Left_Collide_int1 and not self.Top_Collide and not self.Bottom_Collide
-
-
-
-                print 'Left',self.Left_Collide, 'Right', self.Right_Collide,'Top', self.Top_Collide,'bottom',self.Bottom_Collide
-                #print self.guy.x, self.guy.oposx, self.guy.ooposx
-
-
-
-
-                #if self.Top_Collide_int and not 
-
-
-
-                #print self.Right_Collide, self.Left_Collide, self.Top_Collid#
-                """
-                # make intermediate variables for each block_:
-                L_col = False
-                R_col = False
-                T_col = False
-                B_col = False
+                print "Left:", self.Left_Collide, " Right:", self.Right_Collide, " Top:", self.Top_Collide, " Bottom:", self.Bottom_Collide
 
 
         else:
@@ -177,6 +125,8 @@ class JumpGuyModel:
         
 
         self.allsprites.update()
+        self.coinsprites.update()
+        self.blocksprites.update()
 
 
 class Block(pygame.sprite.Sprite):
@@ -250,6 +200,7 @@ class Guy(pygame.sprite.Sprite):
         self.ooposx = 0
         self.ooposy = 0
         #self.grav_start = 0
+        self.rect.topleft = (x,y)
 
     def update(self):
         """ updates the position of the guy"""
@@ -292,12 +243,12 @@ class Guy(pygame.sprite.Sprite):
 
 
         if model.Right_Collide:
-            if self.vx<0:
+            if self.vx>0:
                 self.x = self.x
             else:
                 self.x += self.vx
         elif model.Left_Collide:
-            if self.vx >0:
+            if self.vx <0:
                 self.x = self.x#self.window_size[0]-self.width
             else:
                 self.x += self.vx
@@ -309,16 +260,16 @@ class Guy(pygame.sprite.Sprite):
         #DOWN = model.Bottom_Collide# self.y>= self.window_size[1]-self.height
 
         if model.Top_Collide:
-            print 'down'
-            if self.vy > 0:
+            if self.vy < 0:
                 self.y = self.y
             else: 
                 self.y +=self.vy
         elif model.Bottom_Collide:
-            print 'up'
-            if self.vy<0:
+            print "Bottom Colission!"
+            if self.vy > 0.0:
                 self.y = self.y
-            if self.vy>0:
+                
+            else: 
                 self.y += self.vy
         else:
             self.y += self.vy
@@ -346,6 +297,8 @@ class View:
         self.screen.fill(pygame.Color(0,0,0))
         #pygame.draw.rect(self.screen , pygame.Color(self.model.guy.color[0],self.model.guy.color[1],self.model.guy.color[2]), pygame.Rect(self.model.guy.x,self.model.guy.y,self.model.guy.width,self.model.guy.height))
         model.allsprites.draw(screen)
+        model.coinsprites.draw(screen)
+        model.blocksprites.draw(screen)
 
         if pygame.font:
             font = pygame.font.Font(None, 36)
