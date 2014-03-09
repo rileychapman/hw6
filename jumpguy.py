@@ -1,7 +1,7 @@
 """
 Created on Thu Feb 27 19:34:24 2014
 
-@author: Riley Chapman and Paul Titchner 
+@author: Riley Chapman and Paul Titchener 
 """
 
 import pygame
@@ -99,6 +99,7 @@ class JumpGuyModel:
         self.Rcol_block = []
         self.Bcol_block = []
         self.Tcol_block = []
+        self.End = False
 
 
     def update(self):
@@ -107,6 +108,8 @@ class JumpGuyModel:
                 self.coinsprites.remove(coin)
                 self.coins.remove(coin)
                 self.score +=1
+        if len(self.coins) == 0:
+            self.End = True
 
         blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
         #spritecollide(sprite, group, dokill, collided = None)
@@ -120,7 +123,7 @@ class JumpGuyModel:
         self.Rcol_block = []
         self.Bcol_block = []
         self.Tcol_block = []
-   
+        
 
 
         if len(blocks_hit_list) > 0:
@@ -177,6 +180,7 @@ class Block(pygame.sprite.Sprite):
         self.height = self.rect.height
     def update(self):
         self.exist = True
+
 
 
 
@@ -424,7 +428,7 @@ if __name__ == '__main__':
             if event.type == QUIT:
                 running = False
 
-
+        
         model.update()
         view.draw()
         time.sleep(.001)
