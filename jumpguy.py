@@ -43,6 +43,7 @@ class JumpGuyModel:
             self.coins.append(coin)
 
         block_test = Block(self,0,0)
+        self.block_test = block_test
 
         self.border = []
         for x_border in range(0,self.size[1],block_test.height):
@@ -101,8 +102,9 @@ class JumpGuyModel:
             for hitblock in blocks_hit_list:
                 x_distance = self.guy.rect.center[0] - hitblock.rect.center[0]
                 y_distance = self.guy.rect.center[1] - hitblock.rect.center[1]
-                if x_distance < y_distance: # we collided on top or bottom 
-                    if y_distance >= 0: #bottom collision 
+                print 'y_dist', y_distance,'x_dist',x_distance
+                if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
+                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision 
                         self.Bottom_Collide = True
                     else: #top collision
                         self.Top_Collide = True
