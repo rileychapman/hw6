@@ -33,9 +33,8 @@ def load_sound(name):
         def play(self): pass
     if not pygame.mixer:
         return NoneSound()
-    fullname = os.path.join('data', name)
     try:
-        sound = pygame.mixer.Sound(fullname)
+        sound = pygame.mixer.Sound(name)
     except pygame.error, message:
         print 'Cannot load sound:', wav
         raise SystemExit, message
@@ -52,7 +51,7 @@ class JumpGuyModel:
         self.guy = Guy((255,255,255),20,100,200,300,self.size,self)
         self.coins = []
         self.score = 0
-        for y_coins in range(0,self.size[1],100):
+        for y_coins in range(200,self.size[1],100):
             coin = Coin(self,20,y_coins)
             self.coins.append(coin)
 
@@ -82,6 +81,7 @@ class JumpGuyModel:
         self.allsprites = pygame.sprite.Group(self.guy)
         self.coinsprites = pygame.sprite.Group()
         self.blocksprites = pygame.sprite.Group()
+        self.enemysprites = pygame.sprite.Group()
         for coin in self.coins:
             pygame.sprite.Group.add(self.coinsprites,coin)
         for block in self.blocks:
@@ -101,6 +101,8 @@ class JumpGuyModel:
         self.Tcol_block = []
         self.End = False
 
+        enemy1 = Enemy((255,255,255),20,100,200,300,self.size,self)
+        self.enemysprites.add(enemy1)
 
     def update(self):
         for coin in self.coins:
@@ -164,6 +166,7 @@ class JumpGuyModel:
         self.allsprites.update()
         self.coinsprites.update()
         self.blocksprites.update()
+        self.enemysprites.update()
 
 
 class Block(pygame.sprite.Sprite):
@@ -207,7 +210,84 @@ class Coin(pygame.sprite.Sprite):
             print self.disappear
 
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self,color,height,width,x,y,window_size,model):      
+        pygame.sprite.Sprite.__init__(self)
 
+        self.image, self.rect = load_image('finn1.png', -1) #load an image
+
+
+        self.color = color
+        self.height = self.rect.height
+        self.width = self.rect.width
+        self.x = x#self.rect.topleft[0]
+        self.y = y#Sself.rect.topleft[1]
+        self.forcex = 0.0
+        self.forcey = 0.0
+        self.stopforce = 0.0
+        self.vx = 0
+        self.vy = 0
+        self.jump = False
+        self.window_size = window_size
+        self.vx_inter = 0.0
+        self.vx_jump = 0.0
+        self.oposx = 0
+        self.oposy = 0
+        self.ooposx = 0
+        self.ooposy = 0
+        #self.grav_start = 0
+        self.rect.topleft = (x,y)
+        self.model = model
+        self.jumpup = False
+        self.Left_Collide = False
+        self.Right_Collide = False
+        self.Top_Collide = False
+        self.Bottom_Collide = False
+
+    def update(self):
+        """ updates the position of the enemy"""
+
+        self.vy += .1
+
+        self.vx = 2
+
+#code  that keeps the guy ouside of the blocks
+
+
+        if model.Right_Collide:
+            self.vx = -self.vx
+        elif model.Left_Collide:
+            self.vx = -self.vx
+        self.x += self.vx
+
+        #making code to determine if the sprite is in the window or not
+        #UP = model.Top_Collide #self.y <=0
+        #DOWN = model.Bottom_Collide# self.y>= self.window_size[1]-self.height
+
+        if model.Top_Collide:
+            if self.vy < 0:
+                self.y = self.y
+
+            else: 
+                self.y +=self.vy
+        elif model.Bottom_Collide:
+            if self.vy > 0.0:
+                
+                self.y = self.model.Bcol_block[0].rect.topleft[1]-self.height+1
+                self.vy = 0
+
+                
+            else: 
+                self.y += self.vy
+        else:
+            self.y += self.vy
+
+
+        self.ooposx = self.oposx
+        self.ooposy = self.oposy
+        self.oposx = self.rect.topleft[0]
+        self.oposy = self.rect.topleft[1]
+        self.rect.topleft = (self.x,self.y)
 
                 
 
@@ -346,28 +426,55 @@ class View:
     def __init__(self,model,screen):
         self.model = model
         self.screen = screen
+        self.counter =0
+        self.coin = load_sound('coin.wav')
 
     def draw(self):
-        self.screen.fill(pygame.Color(0,0,0))
-        #pygame.draw.rect(self.screen , pygame.Color(self.model.guy.color[0],self.model.guy.color[1],self.model.guy.color[2]), pygame.Rect(self.model.guy.x,self.model.guy.y,self.model.guy.width,self.model.guy.height))
-        model.allsprites.draw(screen)
-        model.coinsprites.draw(screen)
-        model.blocksprites.draw(screen)
+        if not model.End:
+            self.screen.fill(pygame.Color(0,0,0))
+            #pygame.draw.rect(self.screen , pygame.Color(self.model.guy.color[0],self.model.guy.color[1],self.model.guy.color[2]), pygame.Rect(self.model.guy.x,self.model.guy.y,self.model.guy.width,self.model.guy.height))
+            model.allsprites.draw(screen)
+            model.coinsprites.draw(screen)
+            model.blocksprites.draw(screen)
+            model.enemysprites.draw(screen)
+            for coin in self.model.coins:
+                if coin.disappear:
+                    self.coin.play()
 
-        if pygame.font:
-            font = pygame.font.Font(None, 36)
+            if pygame.font:
+                font = pygame.font.Font(None, 36)
 
-            text = font.render("Jump Guy!", 1, (255, 255, 10))
-            textpos = text.get_rect(centerx=model.size[0]/2)
-            screen.blit(text, textpos)
-            score_str = str(model.score)
-            score_text = 'Score:'+score_str
-            print_score = font.render(score_text, 1, (255, 255, 10))
-            score_pos = print_score.get_rect(topright = (model.size[0],50))
-            screen.blit(print_score,score_pos)
+                text = font.render("Jump Guy!", 1, (255, 255, 10))
+                textpos = text.get_rect(centerx=model.size[0]/2)
+                screen.blit(text, textpos)
+                score_str = str(model.score)
+                score_text = 'Score:'+score_str
+                print_score = font.render(score_text, 1, (255, 255, 10))
+                score_pos = print_score.get_rect(topright = (model.size[0],50))
+                screen.blit(print_score,score_pos)
 
 
-        pygame.display.update()
+            pygame.display.update()
+        else:
+            self.screen.fill(pygame.Color(0,0,0))
+            if self.counter<50:
+                self.counter +=1
+                if pygame.font:
+                    font = pygame.font.Font(None, 36)
+
+                    text = font.render("You Win!", 1, (255, 255, 10))
+                    textpos = text.get_rect(centerx=model.size[0]/2,centery = model.size[1]/2)
+                    screen.blit(text, textpos)
+            elif self.counter<100:
+                self.counter +=1
+            else:
+                self.counter = 0
+
+
+            pygame.display.update()
+
+
+
 
 class keyboard_controller:
     def __init__(self,model):
@@ -405,6 +512,8 @@ class keyboard_controller:
 
 if __name__ == '__main__':
     pygame.init()
+    pygame.mixer.init()
+
     size_scale = 4
     size_scalex = 6
     size_scaley = 4
@@ -428,7 +537,7 @@ if __name__ == '__main__':
             if event.type == QUIT:
                 running = False
 
-        
+
         model.update()
         view.draw()
         time.sleep(.001)
