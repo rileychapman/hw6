@@ -55,8 +55,8 @@ class JumpGuyModel:
         self.guy = Guy((255,255,255),20,100,200,300,self.size,self)
         self.coins = []
         self.score = 0
-        for y_coins in range(200,self.size[1],100):
-            coin = Coin(self,20,y_coins)
+        for y_coins in range(400,500,100):
+            coin = Coin(self,40,y_coins)
             self.coins.append(coin)
 
         block_test = Block(self,0,0)
@@ -78,9 +78,14 @@ class JumpGuyModel:
 
 
         self.blocks = []
-        for x_blocks in range (0,self.size[0]-100,block_test.width):
-            block1 = Block(self,x_blocks,200)
+        for x_blocks in range (0,self.size[0]-200,block_test.width):
+            block1 = Block(self,x_blocks,400)
             self.blocks.append(block1)
+
+
+        for x_blocks in range (200,self.size[0]-30,block_test.width):
+            block1 = Block(self,x_blocks,200)
+            self.blocks.append(block1)            
 
         self.allsprites = pygame.sprite.Group(self.guy)
         self.coinsprites = pygame.sprite.Group()
@@ -98,7 +103,10 @@ class JumpGuyModel:
         self.lose = False
 
         self.enemy1 = Enemy((255,255,255),20,100,500,100,self.size,self)
+        self.enemy2 = Enemy((255,255,255),20,100,100,100,self.size,self)
         self.enemysprites.add(self.enemy1)
+        self.enemysprites.add(self.enemy2)
+
 
         self.blocks_hit_list    = []
 
@@ -113,7 +121,9 @@ class JumpGuyModel:
             self.Win = True
 
         self.blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
-        self.enemy_block_list = pygame.sprite.spritecollide(self.enemy1, self.blocksprites, False)
+        self.enemy1.enemy_block_list = pygame.sprite.spritecollide(self.enemy1, self.blocksprites, False)
+        self.enemy2.enemy_block_list = pygame.sprite.spritecollide(self.enemy2, self.blocksprites, False)
+
         self.enemy_hit = pygame.sprite.spritecollide(self.guy, self.enemysprites, False)
 
         if len(self.enemy_hit) > 0:
@@ -192,7 +202,7 @@ class Enemy(pygame.sprite.Sprite):
         self.forcex = 0.0
         self.forcey = 0.0
         self.stopforce = 0.0
-        self.vx = 5
+        self.vx = 4
         self.vy = 0
         self.jump = False
         self.window_size = window_size
@@ -211,6 +221,7 @@ class Enemy(pygame.sprite.Sprite):
         self.Top_Collide = False
         self.Bottom_Collide = False
         self.On_platform = False
+        self.enemy_block_list = []
 
 
     def update(self):
@@ -221,8 +232,8 @@ class Enemy(pygame.sprite.Sprite):
         self.Bottom_Collide = False
         self.Top_Collide = False
 
-        if len(self.model.enemy_block_list) > 0:
-            for hitblock in self.model.enemy_block_list:
+        if len(self.enemy_block_list) > 0:
+            for hitblock in self.enemy_block_list:
                 x_distance = self.rect.center[0] - hitblock.rect.center[0]
                 y_distance = self.rect.center[1] - hitblock.rect.center[1]
                 if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
@@ -360,14 +371,14 @@ class Guy(pygame.sprite.Sprite):
 
 
         if self.jump and self.Bottom_Collide and not self.Left_Collide and not self.Right_Collide:
-            self.vy = -5
+            self.vy = -6
             self.jump = False
         elif self.jump and self.Left_Collide:
-            self.vy = -5
+            self.vy = -6
             self.vx_jump = 2
             self.jump = False
         elif self.jump and self.Right_Collide:
-            self.vy = -5
+            self.vy = -6
             self.vx_jump = -2
             self.jump = False
         else:
@@ -465,15 +476,21 @@ class View:
     def __init__(self,model,screen):
         self.model = model
         self.screen = screen
-        self.counter =0
         self.coin = load_sound('coin.wav')
         self.lose = load_sound('death.wav')
         self.lose_once = True
-
+        self.gameover = False
+        self.counter = 0  #Counter set to zero so that we can stop animating a certain number of frames after death
+        self.after_win = False #becomes true a number of frames after a win
 
     def draw(self):
         """draws the model on the pygame screen"""
-        if not model.Win:
+        if model.Win:
+            self.counter+=1
+            if self.counter ==25:
+                self.after_win = True
+        if not self.after_win: #not model.Win:
+
             self.screen.fill(pygame.Color(0,0,0))
             #model.allsprites.draw(screen)
             if self.model.guy.vx > 0:
@@ -504,7 +521,8 @@ class View:
             elif direction == 'stop':
                 animObjs['stop'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
             elif direction == 'fall':
-                animObjs['fall'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
+                animObjs['smoke'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
+                self.gameover = True
 
             model.coinsprites.draw(screen)
             model.blocksprites.draw(screen)
@@ -536,12 +554,21 @@ class View:
                     textpos = text.get_rect(centerx=model.size[0]/2,centery = model.size[1]/2)
                     screen.blit(text, textpos)
 
+            if not self.gameover: #if the game has not ended keep rendering
+                pygame.display.update()
 
-            pygame.display.update()
-        else:
-            self.screen.fill(pygame.Color(0,0,0))
+            elif self.counter < 43: # if the game has ended, but a certain number of frames has not passed, keep rendering
+                pygame.display.update()
+                self.counter +=1
+            else:
+                print 'over'
+
+        else: #if the player wins
+
+            #self.screen.fill(pygame.Color(0,0,0))
             if self.counter<50:
                 self.counter +=1
+                print self.counter
                 if pygame.font:
                     font = pygame.font.Font(None, 100)
 
@@ -553,8 +580,7 @@ class View:
             else:
                 self.counter = 0
 
-
-            pygame.display.update()
+                pygame.display.update()
 
 
 
@@ -619,6 +645,17 @@ if __name__ == '__main__':
                                                  ('game_images/crono_left_run.003.gif', 0.1),
                                                  ('game_images/crono_left_run.004.gif', 0.1),
                                                  ('game_images/crono_left_run.005.gif', 0.1)])
+
+    animObjs['smoke'] = pyganim.PygAnimation([('game_images/smoke_puff_0001.png', 0.05),
+                                              ('game_images/smoke_puff_0002.png', 0.05),
+                                              ('game_images/smoke_puff_0003.png', 0.05),
+                                              ('game_images/smoke_puff_0004.png', 0.05),
+                                              ('game_images/smoke_puff_0005.png', 0.05),
+                                              ('game_images/smoke_puff_0006.png', 0.05),
+                                              ('game_images/smoke_puff_0007.png', 0.05),
+                                              ('game_images/smoke_puff_0008.png', 0.1),
+                                              ('game_images/smoke_puff_0009.png', 0.1),
+                                              ('game_images/smoke_puff_0010.png', 0.1)], loop=False)
 
     animObjs['right_run'] = animObjs['left_run'].getCopy() #flips images for running in other direction
     animObjs['right_run'].flip(True, False)
