@@ -50,27 +50,26 @@ class JumpGuyModel:
         """Initialize Jump Guy Model"""
 
         self.size = size
-        print 'creating an object'
        
-        self.guy = Guy((255,255,255),20,100,200,500,self.size,self)
-        self.coins = []
+        self.guy = Guy((255,255,255),20,100,200,500,self.size,self) #makes a character
+        self.coins = [] #intializes list of coins to place
         self.score = 0
-        coin_pos = [(100,500),(200,500),(300,500),(100,300),(800,300),(800,100)]
-        for pos in coin_pos:
+        coin_pos = [(100,500),(200,500),(300,500),(100,300),(800,300),(800,100)] #coins are located at the points in this list
+        for pos in coin_pos:    #makes coins at the postition that thye should be at and adds them to the list of coins
             coin = Coin(self,pos[0],pos[1])
             self.coins.append(coin)
 
-        block_test = Block(self,0,0)
+        block_test = Block(self,0,0) #block to find size
         self.block_test = block_test
         
-        self.border = []
-        for x_border in range(0,self.size[1],block_test.height):
+        self.border = [] #list of blocks on the borders
+        for x_border in range(0,self.size[1],block_test.height): #places border on left and right
             block = Block(self,0,x_border)
-            block1 = Block(self,self.size[0] - block_test.width,x_border)
+            block1 = Block(self,self.size[0] - block_test.width,x_border) 
             self.border.append(block)
             self.border.append(block1)
 
-        for y_border in range(0,self.size[0],block_test.width):
+        for y_border in range(0,self.size[0],block_test.width): #places border on top and bottom
             block = Block(self,y_border,0)
             block2 = Block(self,y_border,self.size[1]-block_test.height)
             self.border.append(block)
@@ -78,7 +77,7 @@ class JumpGuyModel:
 
 
 
-        self.blocks = []
+        self.blocks = [] #list of blocks in the platforms
         for x_blocks in range (0,self.size[0]-200,block_test.width):
             block1 = Block(self,x_blocks,400)
             self.blocks.append(block1)
@@ -88,6 +87,7 @@ class JumpGuyModel:
             block1 = Block(self,x_blocks,200)
             self.blocks.append(block1)            
 
+        #add all of the sprites to sprite lists
         self.allsprites = pygame.sprite.Group(self.guy)
         self.coinsprites = pygame.sprite.Group()
         self.blocksprites = pygame.sprite.Group()
@@ -100,8 +100,10 @@ class JumpGuyModel:
             pygame.sprite.Group.add(self.blocksprites,block)
 
 
-        self.Win = False
-        self.lose = False
+        self.Win = False #you have not won
+        self.lose = False #you have not lost
+
+        #initializing enemies
         self.enemy1 = Enemy((255,255,255),20,100,500,100,self.size,self)
         self.enemy2 = Enemy((255,255,255),20,100,100,100,self.size,self)
         self.enemy3 = Enemy((255,255,255),20,100,800,100,self.size,self)
@@ -122,20 +124,20 @@ class JumpGuyModel:
                 self.score +=1
         if len(self.coins) == 0:
             self.Win = True
-
+        #collisiion detections to see if the moving things have hit blocks or not
         self.blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
         self.enemy1.enemy_block_list = pygame.sprite.spritecollide(self.enemy1, self.blocksprites, False)
         self.enemy2.enemy_block_list = pygame.sprite.spritecollide(self.enemy2, self.blocksprites, False)
         self.enemy3.enemy_block_list = pygame.sprite.spritecollide(self.enemy3, self.blocksprites, False)
 
-
+        #collision detections to see if the enemies have hit the guy
         self.enemy_hit = pygame.sprite.spritecollide(self.guy, self.enemysprites, False)
 
-        if len(self.enemy_hit) > 0:
+        if len(self.enemy_hit) > 0: #if the enmies have hit the guy, stop animating and end
             self.lose = True
             self.allsprites.remove(self.guy)
         #spritecollide(sprite, group, dokill, collided = None)
-
+        #updates all of the sprites
         self.allsprites.update()
         self.coinsprites.update()
         self.blocksprites.update()
@@ -177,17 +179,16 @@ class Coin(pygame.sprite.Sprite):
         self.y = y
         self.width = self.rect.width
         self.height = self.rect.height
-        self.disappear = False 
+        self.disappear = False #the coin is displayed by default
         self.rect.topleft = (self.x,self.y)
     def update(self):
         """ Detects if the coin has been collected and removes it from the model if it has been"""
-        #if abs(self.model.guy.x -self.x) < (self.rect.width - self.model.guy.width)/2 and abs(self.model.guy.y -self.y) < (self.rect.height- self.model.guy.height)/2:
+        #checking to see if a colission has occured
         x_colide = abs(self.model.guy.x -self.x) < self.width + self.model.guy.width/2
         y_colide = abs(self.model.guy.y -self.y) <  (self.height + self.model.guy.height)/2 
         if x_colide and y_colide: #abs(self.model.guy.y -self.y) < 10:
             
             self.disappear = True
-            print self.disappear
 
 class Enemy(pygame.sprite.Sprite):
     """Defines and enemy that will kill the jump guy if it hits him"""
@@ -232,19 +233,20 @@ class Enemy(pygame.sprite.Sprite):
     def update(self):
         """ updates the position of the enemy"""
                 #--------------------------------------------------------
+        #by default the block is not coliding
         self.Left_Collide = False
         self.Right_Collide = False
         self.Bottom_Collide = False
         self.Top_Collide = False
 
+        #checks for colissions and determines what side the colision is on
         if len(self.enemy_block_list) > 0:
             for hitblock in self.enemy_block_list:
                 x_distance = self.rect.center[0] - hitblock.rect.center[0]
                 y_distance = self.rect.center[1] - hitblock.rect.center[1]
                 if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
-                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision
-                        #self.Bottom_Collide = True
-
+                    if y_distance <= 0: #colided on the bottom
+                        #if the character is only penetrating a block by only 3 pixels then it assumes it is hitting a wall and penetrating a bit and not on a floor. If it is on a floor there will be at least 1 block with a greater collision
                         if abs(self.rect.topleft[0] - hitblock.rect.topright[0]) < 3 or abs(self.rect.topright[0] - hitblock.rect.topleft[0]) < 3 and not self.Bottom_Collide:
                             self.Bottom_Collide = False
                         else:
@@ -261,10 +263,10 @@ class Enemy(pygame.sprite.Sprite):
                         self.Right_Collide = True
                         self.Rcol_block = [hitblock]
 
-        self.vy += .1
+        self.vy += .1 #gravity
 
 #code  that keeps the guy ouside of the blocks
-
+        #bounces off of obstacles to the left and right
         if self.Right_Collide:
             self.vx = -self.vx
         elif self.Left_Collide:
@@ -279,7 +281,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.vy =  0#  self.y
             else: 
                 self.y +=self.vy
-        elif self.Bottom_Collide:
+        elif self.Bottom_Collide: #doesn't go through blocks, but instad of falling off, switches direction
             if self.vy > 0.0:
                 self.y =  self.Bcol_block[0].rect.topright[1]-self.height+1 
     
@@ -292,7 +294,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.y = self.y
                 self.vx = -self.vx
             else:
-                self.y += 4
+                self.y += 4 #mob falls to platform quickly
         self.x += self.vx
 
         self.rect.topleft = (self.x,self.y)
@@ -345,18 +347,19 @@ class Guy(pygame.sprite.Sprite):
 
     def update(self):
         """ updates the position of the guy"""
-        #--------------------------------------------------------
+        #-------------------------------------------------------
+        #isn't colliding by default
         self.Left_Collide = False
         self.Right_Collide = False
         self.Bottom_Collide = False
         self.Top_Collide = False
-        if len(self.model.blocks_hit_list) > 0:
+
+        if len(self.model.blocks_hit_list) > 0: #for each element that is coliding, determine the side that it is coliding on 
             for hitblock in self.model.blocks_hit_list:
                 x_distance = self.rect.center[0] - hitblock.rect.center[0]
                 y_distance = self.rect.center[1] - hitblock.rect.center[1]
                 if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
-                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision
-                        #self.Bottom_Collide = True
+                    if y_distance <= 0:
 
                         if abs(self.rect.topleft[0] - hitblock.rect.topright[0]) < 3 or abs(self.rect.topright[0] - hitblock.rect.topleft[0]) < 3 and not self.Bottom_Collide:
                             self.Bottom_Collide = False
@@ -375,14 +378,14 @@ class Guy(pygame.sprite.Sprite):
                         self.Rcol_block = [hitblock]
 
 
-        if self.jump and self.Bottom_Collide and not self.Left_Collide and not self.Right_Collide:
+        if self.jump and self.Bottom_Collide and not self.Left_Collide and not self.Right_Collide: #normal jump
             self.vy = -6
             self.jump = False
-        elif self.jump and self.Left_Collide:
+        elif self.jump and self.Left_Collide: #wall jumping
             self.vy = -6
             self.vx_jump = 2
             self.jump = False
-        elif self.jump and self.Right_Collide:
+        elif self.jump and self.Right_Collide: #wall jumping
             self.vy = -6
             self.vx_jump = -2
             self.jump = False
@@ -391,9 +394,8 @@ class Guy(pygame.sprite.Sprite):
             self.vx_jump = 0
 
         self.vx_inter = self.vx
-        self.vx_inter += self.forcex*.03
+        self.vx_inter += self.forcex*.03 #accelerate in x direction
 
-        #if self.stopforce != 0 and self.vx <0 and self.forcex ==0:\
         if self.forcex == 0 and self.vx< 0:
             self.vx_inter +=.05#self.stopforce*.05
             if self.vx_inter > -.06:
@@ -408,7 +410,7 @@ class Guy(pygame.sprite.Sprite):
 
         speed_cap = 2
 
-        if self.vx_inter < -speed_cap:
+        if self.vx_inter < -speed_cap: # x speed can't be larger than a certain value. If it is, set it to that value
             self.vx_inter = -speed_cap
         elif self.vx_inter > speed_cap:
             self.vx_inter = speed_cap
@@ -417,11 +419,9 @@ class Guy(pygame.sprite.Sprite):
             self.vx_inter = self.vx_inter 
 
 
-        self.vx = self.vx_inter+ self.vx_jump
+        self.vx = self.vx_inter+ self.vx_jump #add together the wall jumping speeds and the controlled speed
 
 #code  that keeps the guy ouside of the blocks
-
-
         if self.Right_Collide:
             if self.vx>0:
                 self.x = self.Rcol_block[0].rect.topleft[0]-self.width
@@ -435,9 +435,8 @@ class Guy(pygame.sprite.Sprite):
         else:
             self.x += self.vx
 
-        #making code to determine if the sprite is in the window or not
-        #UP = model.Top_Collide #self.y <=0
-        #DOWN = model.Bottom_Collide# self.y>= self.window_size[1]-self.height
+  
+        #check if the character is on top or below a wall block
 
         if self.Top_Collide:
             if self.vy < 0:
@@ -446,18 +445,18 @@ class Guy(pygame.sprite.Sprite):
             else: 
                 self.y +=self.vy
         elif self.Bottom_Collide:
-            if self.oovy >10:
+            if self.oovy >10: # if the character is falling to fast, they die
                 self.model.lose = True
                 self.falldeath = True
                 #print self.lose
             if self.vy > 0.0:
                 
-                self.y = self.Bcol_block[0].rect.topleft[1]-self.height+1
+                self.y = self.Bcol_block[0].rect.topleft[1]-self.height+1 #if the character hits a block, set the character to the location of the block
                 self.vy = 0
 
                 
             else: 
-                self.y += self.vy
+                self.y += self.vy #character moves by the speed
         else:
             self.y += self.vy
 
@@ -492,29 +491,28 @@ class View:
         """draws the model on the pygame screen"""
         if model.Win:
             self.counter+=1
-            if self.counter ==25:
-                self.after_win = True
-        if not self.after_win: #not model.Win:
-
-            self.screen.fill(pygame.Color(0,0,0))
+            if self.counter ==25: #waits 25 frames to stop animating so that the final coin has time to disappear
+                self.after_win = True 
+        if not self.after_win: 
+            self.screen.fill(pygame.Color(0,0,0)) 
             #model.allsprites.draw(screen)
             if self.model.guy.vx > 0:
                 if not self.model.guy.Bottom_Collide:  # self.model.guy.vy >0:
-                    direction = 'right_jump'
+                    direction = 'right_jump' #us the animation right jump
                 else:
-                    direction = 'right'
+                    direction = 'right' #use the animation right
             elif self.model.guy.vx == 0:
-                direction = 'stop'
+                direction = 'stop' #use the anmatino stop
 
             else:
                 if not self.model.guy.Bottom_Collide:
-                    direction = 'left_jump'
+                    direction = 'left_jump' #use the anmiation left jump
                 else:
-                    direction = 'left'
+                    direction = 'left' #use the animation left
             if self.model.lose:
-                direction = 'fall'
+                direction = 'fall' #play the smoke animations
             moveConductor.play()
-
+            #play the anmiations
             if direction == 'right':
                 animObjs['right_run'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
             elif direction == 'left':
@@ -528,14 +526,14 @@ class View:
             elif direction == 'fall':
                 animObjs['smoke'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
                 self.gameover = True
-
+            #draw all of the sprites
             model.coinsprites.draw(screen)
             model.blocksprites.draw(screen)
             model.enemysprites.draw(screen)
             for coin in self.model.coins:
                 if coin.disappear:
                     self.coin.play()
-
+            #display text on the screen
             if pygame.font:
                 font = pygame.font.Font(None, 36)
 
@@ -547,7 +545,8 @@ class View:
                 print_score = font.render(score_text, 1, (255, 255, 10))
                 score_pos = print_score.get_rect(topright = (model.size[0],50))
                 screen.blit(print_score,score_pos)
-            if model.lose:
+
+            if model.lose: #if the character loses
 
                 if pygame.font:
                     if self.lose_once:
@@ -566,14 +565,12 @@ class View:
                 pygame.display.update()
                 self.counter +=1
             else:
-                print 'over'
-
+                pass
         else: #if the player wins
 
             #self.screen.fill(pygame.Color(0,0,0))
             if self.counter<50:
                 self.counter +=1
-                print self.counter
                 if pygame.font:
                     font = pygame.font.Font(None, 100)
 
@@ -596,7 +593,7 @@ class keyboard_controller:
         self.model = model
 
     def handle_keyboard_event(self,event):
-
+        #checks keyboard events and feeds them to the model and to the guy
         self.model.guy.jump = False
         if event.type == KEYDOWN:
             if event.key == pygame.K_LEFT:
@@ -628,11 +625,11 @@ class keyboard_controller:
 if __name__ == '__main__':
     pygame.init()
     pygame.mixer.init()
-
+    #scales the screen
     size_scale = 6
-    size_scalex = 6
-    size_scaley = 4
-    size = (size_scalex*30*size_scale,size_scaley*30*size_scale)
+    size_scalex = 6 #sets aspect ratio
+    size_scaley = 4 #sets aspec ratio
+    size = (size_scalex*30*size_scale,size_scaley*30*size_scale) #makeks screen
     screen = pygame.display.set_mode(size)
     clock = pygame.time.Clock()
 
@@ -642,7 +639,7 @@ if __name__ == '__main__':
     controller = keyboard_controller(model)
 
     running = True
-
+    #import images for the animations
     animObjs = {}
     animObjs['left_run'] = pyganim.PygAnimation([('game_images/crono_left_run.000.gif', 0.1), #grabs images 
                                                  ('game_images/crono_left_run.001.gif', 0.1),
