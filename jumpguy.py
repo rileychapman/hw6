@@ -89,20 +89,13 @@ class JumpGuyModel:
         for block in self.border:
             pygame.sprite.Group.add(self.blocksprites,block)
 
-        #initalizing block collision stuff
-        self.Left_Collide = False
-        self.Right_Collide = False
-        self.Bottom_Collide = False
-        self.Top_Collide = False
-        #record the blocks that we have colided with so that we know where to move the guy to 
-        self.Lcol_block = []
-        self.Rcol_block = []
-        self.Bcol_block = []
-        self.Tcol_block = []
+
         self.End = False
 
-        enemy1 = Enemy((255,255,255),20,100,200,300,self.size,self)
-        self.enemysprites.add(enemy1)
+        self.enemy1 = Enemy((255,255,255),20,100,200,300,self.size,self)
+        self.enemysprites.add(self.enemy1)
+
+        self.blocks_hit_list    = []
 
     def update(self):
         for coin in self.coins:
@@ -113,60 +106,17 @@ class JumpGuyModel:
         if len(self.coins) == 0:
             self.End = True
 
-        blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
+        self.blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
+        self.enemy_block_list = pygame.sprite.spritecollide(self.enemy1, self.blocksprites, False)
+
         #spritecollide(sprite, group, dokill, collided = None)
-
-        self.Left_Collide = False
-        self.Right_Collide = False
-        self.Bottom_Collide = False
-        self.Top_Collide = False
-
-        self.Lcol_block = []
-        self.Rcol_block = []
-        self.Bcol_block = []
-        self.Tcol_block = []
-        
-
-
-        if len(blocks_hit_list) > 0:
-            for hitblock in blocks_hit_list:
-                x_distance = self.guy.rect.center[0] - hitblock.rect.center[0]
-                y_distance = self.guy.rect.center[1] - hitblock.rect.center[1]
-                if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
-                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision
-                        #self.Bottom_Collide = True
-
-                        if abs(self.guy.rect.topleft[0] - hitblock.rect.topright[0]) < 3 or abs(self.guy.rect.topright[0] - hitblock.rect.topleft[0]) < 3 and not self.Bottom_Collide:
-                            self.Bottom_Collide = False
-                        else:
-                            self.Bottom_Collide = True
-                        self.Bcol_block = [hitblock]
-                    else: #top collision
-                        self.Top_Collide = True
-                        self.Tcol_block = [hitblock]
-                else: #we collided on left or right 
-                    if x_distance >= 0: #left collision
-                        self.Left_Collide = True
-                        self.Lcol_block = [hitblock]
-                    else: #right collision
-                        self.Right_Collide = True
-                        self.Rcol_block = [hitblock]
-
-
-
-        else:
-            self.Left_Collide = False
-            self.Right_Collide = False
-            self.Bottom_Collide = False
-            self.Top_Collide = False
-        #self.Right_Collide =  self.guy.rect.topright[0] >= blocks_hit_list[0].rect.left[0]
-        #self.Left_Collide =  self.guy.rect.topleft[0] >= blocks_hit_list[0].rect.topright[0]
-        
 
         self.allsprites.update()
         self.coinsprites.update()
         self.blocksprites.update()
         self.enemysprites.update()
+
+
 
 
 class Block(pygame.sprite.Sprite):
@@ -225,7 +175,7 @@ class Enemy(pygame.sprite.Sprite):
         self.forcex = 0.0
         self.forcey = 0.0
         self.stopforce = 0.0
-        self.vx = 0
+        self.vx = 2
         self.vy = 0
         self.jump = False
         self.window_size = window_size
@@ -246,17 +196,44 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self):
         """ updates the position of the enemy"""
+                #--------------------------------------------------------
+        self.Left_Collide = False
+        self.Right_Collide = False
+        self.Bottom_Collide = False
+        self.Top_Collide = False
+
+        if len(self.model.enemy_block_list) > 0:
+            for hitblock in self.model.enemy_block_list:
+                x_distance = self.rect.center[0] - hitblock.rect.center[0]
+                y_distance = self.rect.center[1] - hitblock.rect.center[1]
+                if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
+                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision
+                        #self.Bottom_Collide = True
+
+                        if abs(self.rect.topleft[0] - hitblock.rect.topright[0]) < 3 or abs(self.rect.topright[0] - hitblock.rect.topleft[0]) < 3 and not self.Bottom_Collide:
+                            self.Bottom_Collide = False
+                        else:
+                            self.Bottom_Collide = True
+                        self.Bcol_block = [hitblock]
+                    else: #top collision
+                        self.Top_Collide = True
+                        self.Tcol_block = [hitblock]
+                else: #we collided on left or right 
+                    if x_distance >= 0: #left collision
+                        self.Left_Collide = True
+                        self.Lcol_block = [hitblock]
+                    else: #right collision
+                        self.Right_Collide = True
+                        self.Rcol_block = [hitblock]
+
 
         self.vy += .1
 
-        self.vx = 2
-
 #code  that keeps the guy ouside of the blocks
 
-
-        if model.Right_Collide:
+        if self.Right_Collide:
             self.vx = -self.vx
-        elif model.Left_Collide:
+        elif self.Left_Collide:
             self.vx = -self.vx
         self.x += self.vx
 
@@ -264,29 +241,22 @@ class Enemy(pygame.sprite.Sprite):
         #UP = model.Top_Collide #self.y <=0
         #DOWN = model.Bottom_Collide# self.y>= self.window_size[1]-self.height
 
-        if model.Top_Collide:
+        if self.Top_Collide:
             if self.vy < 0:
                 self.y = self.y
 
             else: 
                 self.y +=self.vy
-        elif model.Bottom_Collide:
+        elif self.Bottom_Collide:
             if self.vy > 0.0:
                 
-                self.y = self.model.Bcol_block[0].rect.topleft[1]-self.height+1
+                self.y = self.y#self.model.Bcol_block[0].rect.topleft[1]-self.height+1
                 self.vy = 0
-
-                
             else: 
                 self.y += self.vy
         else:
             self.y += self.vy
 
-
-        self.ooposx = self.oposx
-        self.ooposy = self.oposy
-        self.oposx = self.rect.topleft[0]
-        self.oposy = self.rect.topleft[1]
         self.rect.topleft = (self.x,self.y)
 
                 
@@ -321,23 +291,58 @@ class Guy(pygame.sprite.Sprite):
         self.rect.topleft = (x,y)
         self.model = model
         self.jumpup = False
+        self.Left_Collide = False
+        self.Right_Collide = False
+        self.Bottom_Collide = False
+        self.Top_Collide = False
+        self.Lcol_block = []
+        self.Rcol_block = []
+        self.Bcol_block = []
+        self.Tcol_block = []
 
     def update(self):
         """ updates the position of the guy"""
+        #--------------------------------------------------------
+        self.Left_Collide = False
+        self.Right_Collide = False
+        self.Bottom_Collide = False
+        self.Top_Collide = False
+        if len(self.model.blocks_hit_list) > 0:
+            for hitblock in self.model.blocks_hit_list:
+                x_distance = self.rect.center[0] - hitblock.rect.center[0]
+                y_distance = self.rect.center[1] - hitblock.rect.center[1]
+                if abs(x_distance) < abs(y_distance): # we collided on top or bottom 
+                    if y_distance <= 0:#self.guy.rect.height/2 + self.block_test.height/2: #bottom collision
+                        #self.Bottom_Collide = True
 
-        if self.jump and self.model.Bottom_Collide and not self.model.Left_Collide and not self.model.Right_Collide:
+                        if abs(self.rect.topleft[0] - hitblock.rect.topright[0]) < 3 or abs(self.rect.topright[0] - hitblock.rect.topleft[0]) < 3 and not self.Bottom_Collide:
+                            self.Bottom_Collide = False
+                        else:
+                            self.Bottom_Collide = True
+                        self.Bcol_block = [hitblock]
+                    else: #top collision
+                        self.Top_Collide = True
+                        self.Tcol_block = [hitblock]
+                else: #we collided on left or right 
+                    if x_distance >= 0: #left collision
+                        self.Left_Collide = True
+                        self.Lcol_block = [hitblock]
+                    else: #right collision
+                        self.Right_Collide = True
+                        self.Rcol_block = [hitblock]
+
+
+        if self.jump and self.Bottom_Collide and not self.Left_Collide and not self.Right_Collide:
             self.vy = -5
             self.jump = False
-        elif self.jump and self.model.Left_Collide:
+        elif self.jump and self.Left_Collide:
             self.vy = -5
             self.vx_jump = 2
             self.jump = False
-            print 'wall jump'
-        elif self.jump and self.model.Right_Collide:
+        elif self.jump and self.Right_Collide:
             self.vy = -5
             self.vx_jump = -2
             self.jump = False
-            print 'wall jump'
         else:
             self.vy += .1
             self.vx_jump = 0
@@ -374,14 +379,14 @@ class Guy(pygame.sprite.Sprite):
 #code  that keeps the guy ouside of the blocks
 
 
-        if model.Right_Collide:
+        if self.Right_Collide:
             if self.vx>0:
-                self.x = self.model.Rcol_block[0].rect.topleft[0]-self.width
+                self.x = self.Rcol_block[0].rect.topleft[0]-self.width
             else:
                 self.x += self.vx
-        elif model.Left_Collide:
+        elif self.Left_Collide:
             if self.vx <0:
-                self.x = self.model.Lcol_block[0].rect.topright[0]
+                self.x = self.Lcol_block[0].rect.topright[0]
             else:
                 self.x += self.vx
         else:
@@ -391,16 +396,16 @@ class Guy(pygame.sprite.Sprite):
         #UP = model.Top_Collide #self.y <=0
         #DOWN = model.Bottom_Collide# self.y>= self.window_size[1]-self.height
 
-        if model.Top_Collide:
+        if self.Top_Collide:
             if self.vy < 0:
                 self.y = self.y
 
             else: 
                 self.y +=self.vy
-        elif model.Bottom_Collide:
+        elif self.Bottom_Collide:
             if self.vy > 0.0:
                 
-                self.y = self.model.Bcol_block[0].rect.topleft[1]-self.height+1
+                self.y = self.Bcol_block[0].rect.topleft[1]-self.height+1
                 self.vy = 0
 
                 
