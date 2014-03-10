@@ -29,3 +29,15 @@ if direction == 'right':
 	#then actualy move the player
 
 pygame.display.update()
+
+
+smokeAnim = pyganim.PygAnimation([('testimages/smoke_puff_0001.png', 0.1),
+                                  ('testimages/smoke_puff_0002.png' 0.1),
+                                  ('testimages/smoke_puff_0003.png', 0.1),
+                                  ('testimages/smoke_puff_0004.png', 0.1),
+                                  ('testimages/smoke_puff_0005.png', 0.1),
+                                  ('testimages/smoke_puff_0006.png', 0.1),
+                                  ('testimages/smoke_puff_0007.png', 0.1),
+                                  ('testimages/smoke_puff_0008.png', 0.3),
+                                  ('testimages/smoke_puff_0009.png', 0.3),
+                                  ('testimages/smoke_puff_0010.png', 0.3)], loop=False)
