@@ -52,11 +52,12 @@ class JumpGuyModel:
         self.size = size
         print 'creating an object'
        
-        self.guy = Guy((255,255,255),20,100,200,300,self.size,self)
+        self.guy = Guy((255,255,255),20,100,200,500,self.size,self)
         self.coins = []
         self.score = 0
-        for y_coins in range(400,500,100):
-            coin = Coin(self,40,y_coins)
+        coin_pos = [(100,500),(200,500),(300,500),(100,300),(800,300),(800,100)]
+        for pos in coin_pos:
+            coin = Coin(self,pos[0],pos[1])
             self.coins.append(coin)
 
         block_test = Block(self,0,0)
@@ -101,11 +102,13 @@ class JumpGuyModel:
 
         self.Win = False
         self.lose = False
-
         self.enemy1 = Enemy((255,255,255),20,100,500,100,self.size,self)
         self.enemy2 = Enemy((255,255,255),20,100,100,100,self.size,self)
+        self.enemy3 = Enemy((255,255,255),20,100,800,100,self.size,self)
+
         self.enemysprites.add(self.enemy1)
         self.enemysprites.add(self.enemy2)
+        self.enemysprites.add(self.enemy3)
 
 
         self.blocks_hit_list    = []
@@ -123,6 +126,8 @@ class JumpGuyModel:
         self.blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
         self.enemy1.enemy_block_list = pygame.sprite.spritecollide(self.enemy1, self.blocksprites, False)
         self.enemy2.enemy_block_list = pygame.sprite.spritecollide(self.enemy2, self.blocksprites, False)
+        self.enemy3.enemy_block_list = pygame.sprite.spritecollide(self.enemy3, self.blocksprites, False)
+
 
         self.enemy_hit = pygame.sprite.spritecollide(self.guy, self.enemysprites, False)
 
