@@ -43,8 +43,11 @@ def load_sound(name):
 
 
 class JumpGuyModel:
-    """This class encodes the game state"""
+    """This class encodes the game state. Sprites are initialized and interactions between sprites are detected. The individaul sprite movements are within the sprite classes
+    Sets up the stage and coin positions"""
     def __init__(self,size):
+        """Initialize Jump Guy Model"""
+
         self.size = size
         print 'creating an object'
        
@@ -90,25 +93,31 @@ class JumpGuyModel:
             pygame.sprite.Group.add(self.blocksprites,block)
 
 
-        self.End = False
+        self.Win = False
+        self.lose = False
 
-        self.enemy1 = Enemy((255,255,255),20,100,200,300,self.size,self)
+        self.enemy1 = Enemy((255,255,255),20,100,500,100,self.size,self)
         self.enemysprites.add(self.enemy1)
 
         self.blocks_hit_list    = []
 
     def update(self):
+        """ Update JumpGuyModel. Tracks coins and collisions"""
         for coin in self.coins:
             if coin.disappear:
                 self.coinsprites.remove(coin)
                 self.coins.remove(coin)
                 self.score +=1
         if len(self.coins) == 0:
-            self.End = True
+            self.Win = True
 
         self.blocks_hit_list = pygame.sprite.spritecollide(self.guy, self.blocksprites, False)
         self.enemy_block_list = pygame.sprite.spritecollide(self.enemy1, self.blocksprites, False)
+        self.enemy_hit = pygame.sprite.spritecollide(self.guy, self.enemysprites, False)
 
+        if len(self.enemy_hit) > 0:
+            self.lose = True
+            self.allsprites.remove(self.guy)
         #spritecollide(sprite, group, dokill, collided = None)
 
         self.allsprites.update()
@@ -132,6 +141,7 @@ class Block(pygame.sprite.Sprite):
         self.width = self.rect.width
         self.height = self.rect.height
     def update(self):
+        """Currently and empty function, if the blocks need to change it will be filled"""
         self.exist = True
 
 
@@ -139,7 +149,10 @@ class Block(pygame.sprite.Sprite):
 
         
 class Coin(pygame.sprite.Sprite):
+    """Defines a coin that jump guy can pick up and increase his score"""
+
     def __init__(self,model,x,y):
+        """Initialized variables and loads the coin image"""
         self.model = model
         pygame.sprite.Sprite.__init__(self)
 
@@ -151,6 +164,7 @@ class Coin(pygame.sprite.Sprite):
         self.disappear = False 
         self.rect.topleft = (self.x,self.y)
     def update(self):
+        """ Detects if the coin has been collected and removes it from the model if it has been"""
         #if abs(self.model.guy.x -self.x) < (self.rect.width - self.model.guy.width)/2 and abs(self.model.guy.y -self.y) < (self.rect.height- self.model.guy.height)/2:
         x_colide = abs(self.model.guy.x -self.x) < self.width + self.model.guy.width/2
         y_colide = abs(self.model.guy.y -self.y) <  (self.height + self.model.guy.height)/2 
@@ -159,9 +173,11 @@ class Coin(pygame.sprite.Sprite):
             self.disappear = True
             print self.disappear
 
-
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self,color,height,width,x,y,window_size,model):      
+    """Defines and enemy that will kill the jump guy if it hits him"""
+    def __init__(self,color,height,width,x,y,window_size,model):
+        """Initializes variables for the enemy sprite"""
+
         pygame.sprite.Sprite.__init__(self)
 
         self.image, self.rect = load_image('finn1.png', -1) #load an image
@@ -193,6 +209,8 @@ class Enemy(pygame.sprite.Sprite):
         self.Right_Collide = False
         self.Top_Collide = False
         self.Bottom_Collide = False
+        self.On_platform = False
+
 
     def update(self):
         """ updates the position of the enemy"""
@@ -226,7 +244,6 @@ class Enemy(pygame.sprite.Sprite):
                         self.Right_Collide = True
                         self.Rcol_block = [hitblock]
 
-
         self.vy += .1
 
 #code  that keeps the guy ouside of the blocks
@@ -235,27 +252,31 @@ class Enemy(pygame.sprite.Sprite):
             self.vx = -self.vx
         elif self.Left_Collide:
             self.vx = -self.vx
-        self.x += self.vx
 
         #making code to determine if the sprite is in the window or not
         #UP = model.Top_Collide #self.y <=0
         #DOWN = model.Bottom_Collide# self.y>= self.window_size[1]-self.height
-
         if self.Top_Collide:
             if self.vy < 0:
-                self.y = self.y
-
+                self.y = self.Tcol_block.rect.bottomright[1]
+                self.vy =  0#  self.y
             else: 
                 self.y +=self.vy
         elif self.Bottom_Collide:
             if self.vy > 0.0:
-                
-                self.y = self.y#self.model.Bcol_block[0].rect.topleft[1]-self.height+1
+                self.y =  self.Bcol_block[0].rect.topright[1]-self.height+1 
+    
                 self.vy = 0
             else: 
                 self.y += self.vy
+            self.On_platform = True
         else:
-            self.y += self.vy
+            if self.On_platform: #not self.Bottom_Collide:# and On_platform:
+                self.y = self.y
+                self.vx = -self.vx
+            else:
+                self.y += 4
+        self.x += self.vx
 
         self.rect.topleft = (self.x,self.y)
 
@@ -263,7 +284,9 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Guy(pygame.sprite.Sprite):
-    def __init__(self,color,height,width,x,y,window_size,model):      
+    """ Defines the character sprite"""
+    def __init__(self,color,height,width,x,y,window_size,model):    
+        """sets and initalizes variables and loads the image for the sprite"""
         pygame.sprite.Sprite.__init__(self)
 
         self.image, self.rect = load_image('finn1.png', -1) #load an image
@@ -433,11 +456,14 @@ class View:
         self.screen = screen
         self.counter =0
         self.coin = load_sound('coin.wav')
+        self.lose = load_sound('death.wav')
+        self.lose_once = True
+
 
     def draw(self):
-        if not model.End:
+        """draws the model on the pygame screen"""
+        if not model.Win:
             self.screen.fill(pygame.Color(0,0,0))
-            #pygame.draw.rect(self.screen , pygame.Color(self.model.guy.color[0],self.model.guy.color[1],self.model.guy.color[2]), pygame.Rect(self.model.guy.x,self.model.guy.y,self.model.guy.width,self.model.guy.height))
             model.allsprites.draw(screen)
             model.coinsprites.draw(screen)
             model.blocksprites.draw(screen)
@@ -457,6 +483,16 @@ class View:
                 print_score = font.render(score_text, 1, (255, 255, 10))
                 score_pos = print_score.get_rect(topright = (model.size[0],50))
                 screen.blit(print_score,score_pos)
+            if model.lose:
+                if pygame.font:
+                    if self.lose_once:
+                        self.lose.play()
+                        self.lose_once = False
+                    font = pygame.font.Font(None, 100)
+
+                    text = font.render("You Lose!", 1, (255, 10, 10))
+                    textpos = text.get_rect(centerx=model.size[0]/2,centery = model.size[1]/2)
+                    screen.blit(text, textpos)
 
 
             pygame.display.update()
@@ -465,7 +501,7 @@ class View:
             if self.counter<50:
                 self.counter +=1
                 if pygame.font:
-                    font = pygame.font.Font(None, 36)
+                    font = pygame.font.Font(None, 100)
 
                     text = font.render("You Win!", 1, (255, 255, 10))
                     textpos = text.get_rect(centerx=model.size[0]/2,centery = model.size[1]/2)
@@ -482,6 +518,7 @@ class View:
 
 
 class keyboard_controller:
+    """Logs keyboard events and changes the model accordingly"""
     def __init__(self,model):
         self.model = model
 
