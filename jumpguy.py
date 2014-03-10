@@ -10,6 +10,7 @@ import random
 import math
 import time
 import sys,os
+import pyganim
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
@@ -180,7 +181,7 @@ class Enemy(pygame.sprite.Sprite):
 
         pygame.sprite.Sprite.__init__(self)
 
-        self.image, self.rect = load_image('finn1.png', -1) #load an image
+        self.image, self.rect = load_image('enemy1.png', -1) #load an image
 
 
         self.color = color
@@ -191,7 +192,7 @@ class Enemy(pygame.sprite.Sprite):
         self.forcex = 0.0
         self.forcey = 0.0
         self.stopforce = 0.0
-        self.vx = 2
+        self.vx = 5
         self.vy = 0
         self.jump = False
         self.window_size = window_size
@@ -289,7 +290,7 @@ class Guy(pygame.sprite.Sprite):
         """sets and initalizes variables and loads the image for the sprite"""
         pygame.sprite.Sprite.__init__(self)
 
-        self.image, self.rect = load_image('finn1.png', -1) #load an image
+        self.image, self.rect = load_image('game_images/crono_left_run.000.gif', -1) #load an image
 
 
         self.color = color
@@ -310,6 +311,8 @@ class Guy(pygame.sprite.Sprite):
         self.oposy = 0
         self.ooposx = 0
         self.ooposy = 0
+        self.ovy = 0
+        self.oovy =0 
         #self.grav_start = 0
         self.rect.topleft = (x,y)
         self.model = model
@@ -322,6 +325,7 @@ class Guy(pygame.sprite.Sprite):
         self.Rcol_block = []
         self.Bcol_block = []
         self.Tcol_block = []
+        self.falldeath = False
 
     def update(self):
         """ updates the position of the guy"""
@@ -426,6 +430,10 @@ class Guy(pygame.sprite.Sprite):
             else: 
                 self.y +=self.vy
         elif self.Bottom_Collide:
+            if self.oovy >10:
+                self.model.lose = True
+                self.falldeath = True
+                #print self.lose
             if self.vy > 0.0:
                 
                 self.y = self.Bcol_block[0].rect.topleft[1]-self.height+1
@@ -442,6 +450,9 @@ class Guy(pygame.sprite.Sprite):
         self.ooposy = self.oposy
         self.oposx = self.rect.topleft[0]
         self.oposy = self.rect.topleft[1]
+        self.oovy = self.ovy
+        self.ovy = self.vy
+
         self.rect.topleft = (self.x,self.y)
 
 
@@ -464,7 +475,37 @@ class View:
         """draws the model on the pygame screen"""
         if not model.Win:
             self.screen.fill(pygame.Color(0,0,0))
-            model.allsprites.draw(screen)
+            #model.allsprites.draw(screen)
+            if self.model.guy.vx > 0:
+                if not self.model.guy.Bottom_Collide:  # self.model.guy.vy >0:
+                    direction = 'right_jump'
+                else:
+                    direction = 'right'
+            elif self.model.guy.vx == 0:
+                direction = 'stop'
+
+            else:
+                if not self.model.guy.Bottom_Collide:
+                    direction = 'left_jump'
+                else:
+                    direction = 'left'
+            if self.model.lose:
+                direction = 'fall'
+            moveConductor.play()
+
+            if direction == 'right':
+                animObjs['right_run'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
+            elif direction == 'left':
+                animObjs['left_run'].blit(screen, (self.model.guy.x, self.model.guy.y))
+            elif direction == 'right_jump':
+                animObjs['right_jump'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
+            elif direction == 'left_jump':
+                animObjs['left_jump'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
+            elif direction == 'stop':
+                animObjs['stop'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
+            elif direction == 'fall':
+                animObjs['fall'].blit(screen, (self.model.guy.x, self.model.guy.y)) 
+
             model.coinsprites.draw(screen)
             model.blocksprites.draw(screen)
             model.enemysprites.draw(screen)
@@ -484,6 +525,7 @@ class View:
                 score_pos = print_score.get_rect(topright = (model.size[0],50))
                 screen.blit(print_score,score_pos)
             if model.lose:
+
                 if pygame.font:
                     if self.lose_once:
                         self.lose.play()
@@ -556,7 +598,7 @@ if __name__ == '__main__':
     pygame.init()
     pygame.mixer.init()
 
-    size_scale = 4
+    size_scale = 6
     size_scalex = 6
     size_scaley = 4
     size = (size_scalex*30*size_scale,size_scaley*30*size_scale)
@@ -569,6 +611,33 @@ if __name__ == '__main__':
     controller = keyboard_controller(model)
 
     running = True
+
+    animObjs = {}
+    animObjs['left_run'] = pyganim.PygAnimation([('game_images/crono_left_run.000.gif', 0.1), #grabs images 
+                                                 ('game_images/crono_left_run.001.gif', 0.1),
+                                                 ('game_images/crono_left_run.002.gif', 0.1),
+                                                 ('game_images/crono_left_run.003.gif', 0.1),
+                                                 ('game_images/crono_left_run.004.gif', 0.1),
+                                                 ('game_images/crono_left_run.005.gif', 0.1)])
+
+    animObjs['right_run'] = animObjs['left_run'].getCopy() #flips images for running in other direction
+    animObjs['right_run'].flip(True, False)
+    animObjs['right_run'].makeTransformsPermanent()
+
+    animObjs['left_jump'] = pyganim.PygAnimation([('game_images/crono_left_run.001.gif', 0.1)]) #grabs an image for jumping left
+
+    animObjs['right_jump'] = animObjs['left_jump'].getCopy() #flips images for jumpingin other direction
+    animObjs['right_jump'].flip(True, False)
+    animObjs['right_jump'].makeTransformsPermanent()
+
+    animObjs['stop'] = pyganim.PygAnimation([('game_images/crono_front.gif', 0.1)]) #grabs an image for stopping
+    animObjs['fall'] = pyganim.PygAnimation([('game_images/crono_down.gif', 0.1)]) #grabs an image for stopping
+
+
+
+    direction = 'right'
+
+    moveConductor = pyganim.PygConductor(animObjs)
 
     while running:
         clock.tick(120) #makes the game run at a constant rate 
