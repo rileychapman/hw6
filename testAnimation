@@ -1,0 +1,31 @@
+animObjs = {}
+animObj['left_run'] = pyganim.PygAnimation([('game_images/crono_left_run.000.gif', 0.1), #grabs images 
+			                                 ('game_images/crono_left_run.001.gif', 0.1),
+			                                 ('game_images/crono_left_run.002.gif', 0.1),
+			                                 ('game_images/crono_left_run.003.gif', 0.1),
+			                                 ('game_images/crono_left_run.004.gif', 0.1),
+			                                 ('game_images/crono_left_run.005.gif', 0.1)])
+
+animObjs['right_run'] = animObjs['left_run'].getCopy() #flips images for running in other direction
+animObjs['right_run'].flip(True, False)
+animObjs['right_run'].makeTransformsPermanent()
+
+animObj['left_jump'] = pyganim.PygAnimation([('game_images/crono_left_run.001.gif', 0.1)]) #grabs an image for jumping left
+
+animObjs['right_jump'] = animObjs['left_jump'].getCopy() #flips images for jumpingin other direction
+animObjs['right_jump'].flip(True, False)
+animObjs['right_jump'].makeTransformsPermanent()
+
+direction = 'right'
+
+moveConductor = pyganim.PygConductor(animObjs)
+
+if direction == 'right':
+	moveConductor.play()
+	animObjs['right_run'].blit(windowSurface, (x, y)) 
+	#window surface defined as windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
+	#(x,y) position of top left corner 
+
+	#then actualy move the player
+
+pygame.display.update()
