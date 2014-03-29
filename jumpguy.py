@@ -187,7 +187,7 @@ class Coin(pygame.sprite.Sprite):
         x_colide = abs(self.model.guy.x -self.x) < self.width + self.model.guy.width/2
         y_colide = abs(self.model.guy.y -self.y) <  (self.height + self.model.guy.height)/2 
         if x_colide and y_colide: #abs(self.model.guy.y -self.y) < 10:
-            
+            # look this up: http://www.pygame.org/docs/ref/sprite.html#pygame.sprite.Sprite.kill
             self.disappear = True
 
 class Enemy(pygame.sprite.Sprite):
@@ -238,6 +238,7 @@ class Enemy(pygame.sprite.Sprite):
         self.Right_Collide = False
         self.Bottom_Collide = False
         self.Top_Collide = False
+        # The default is already set in the constructor.
 
         #checks for colissions and determines what side the colision is on
         if len(self.enemy_block_list) > 0:
@@ -272,6 +273,11 @@ class Enemy(pygame.sprite.Sprite):
         elif self.Left_Collide:
             self.vx = -self.vx
 
+        '''
+        Why is this next section necessary for an enemy? 
+        If they're not allowed to jump, then they can't move upward at all.
+
+        '''
         #making code to determine if the sprite is in the window or not
         #UP = model.Top_Collide #self.y <=0
         #DOWN = model.Bottom_Collide# self.y>= self.window_size[1]-self.height
@@ -311,6 +317,7 @@ class Guy(pygame.sprite.Sprite):
         self.image, self.rect = load_image('game_images/crono_left_run.000.gif', -1) #load an image
 
 
+        # document some of these initial values because I have no clue what they're supposed to be...
         self.color = color
         self.height = self.rect.height
         self.width = self.rect.width
@@ -410,6 +417,11 @@ class Guy(pygame.sprite.Sprite):
 
         speed_cap = 2
 
+        '''
+        More efficient way of writing the following if...elif...else loop (also, no need for else)
+        if abs(self.vx_inter) > speed_cap: 
+            self.vx_inter *= speed_cap / self.vs_inter 
+        '''
         if self.vx_inter < -speed_cap: # x speed can't be larger than a certain value. If it is, set it to that value
             self.vx_inter = -speed_cap
         elif self.vx_inter > speed_cap:
@@ -679,7 +691,7 @@ if __name__ == '__main__':
     moveConductor = pyganim.PygConductor(animObjs)
 
     while running:
-        clock.tick(120) #makes the game run at a constant rate 
+        # clock.tick(120) #makes the game run at a constant rate 
 
         for event in pygame.event.get():
             if event.type == KEYDOWN or KEYUP:
